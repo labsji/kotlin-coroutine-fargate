@@ -1,0 +1,6 @@
+build/
+.gradle/
+*.jar
+deploy.zip
+Dockerrun.aws.json
+.kiro-instructions.md
