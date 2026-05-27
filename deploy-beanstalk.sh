@@ -38,6 +38,7 @@ else
     --solution-stack-name "64bit Amazon Linux 2023 v4.12.0 running Corretto 21" \
     --option-settings \
       "Namespace=aws:autoscaling:launchconfiguration,OptionName=InstanceType,Value=${INSTANCE_TYPE}" \
+      "Namespace=aws:autoscaling:launchconfiguration,OptionName=IamInstanceProfile,Value=aws-elasticbeanstalk-ec2-role" \
       "Namespace=aws:elasticbeanstalk:environment,OptionName=EnvironmentType,Value=SingleInstance" \
     --region "$REGION" > /dev/null
 fi
