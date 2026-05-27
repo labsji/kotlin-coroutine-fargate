@@ -87,15 +87,28 @@ Kiro will query CloudWatch via CLI and show you the numbers. To see the visual g
 
 https://ap-south-1.console.aws.amazon.com/cloudwatch/home?region=ap-south-1#metricsV2
 
-Navigate: All Metrics → EC2 → Per-Instance Metrics → CPUUtilization
+Navigate: All Metrics → **AWS/EC2** (not Beanstalk) → Per-Instance Metrics → CPUUtilization
+
+**Important tips for seeing data:**
+- Use **EC2 metric**, not Beanstalk metric (Beanstalk's is unreliable)
+- Set period to **1 minute** (default 5-min hides short spikes)
+- Data appears **2-3 minutes after** load ends (CloudWatch ingestion lag)
+- A single curl completes too fast — need **60 seconds of sustained load** to register
 
 ### Experiment
 
-Try different coroutine configs on the same instance and watch the graph change:
-- `curl http://<env-url>/lab/1?n=1000` — watch CPU spike to 100%
-- `curl http://<env-url>/lab/3?parallelism=1` — watch CPU drop to ~50% on 2-vCPU
-- `curl http://<env-url>/lab/3?parallelism=4` — watch CPU hit 100% again
-- `curl http://<env-url>/lab/4?permits=5` — steady low CPU, controlled throughput
+To produce a visible graph, run sustained load (Kiro will do this for you):
+```bash
+# 60s of Lab 1 (full CPU) → pause → 60s of Lab 3 parallelism=1 (throttled)
+```
+
+Result on graph: **high spike → drop → low plateau**. Same 1000 coroutines, one config change. That's the visual proof of what `limitedParallelism` does.
+
+Try different configs and watch the graph respond:
+- `curl http://<env-url>/lab/1?n=1000` — CPU spikes to 100%
+- `curl http://<env-url>/lab/3?parallelism=1` — CPU drops to ~50% on 2-vCPU
+- `curl http://<env-url>/lab/3?parallelism=4` — CPU back to 100%
+- `curl http://<env-url>/lab/4?permits=5` — steady low CPU
 
 Keep the CloudWatch graph open — refresh every 60s to see the line move with each experiment.
 

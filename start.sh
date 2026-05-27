@@ -25,7 +25,12 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
 5. After deploying, ALWAYS print the CloudWatch URL on its own line so the student can click/copy it:
    "Open this in your browser to see the CPU/memory graph:"
    https://ap-south-1.console.aws.amazon.com/cloudwatch/home?region=ap-south-1#metricsV2
-   Then prompt them to experiment with different parameters and watch the graph change.
+   Tell them: navigate to AWS/EC2 → Per-Instance Metrics → CPUUtilization. Set period to 1 minute.
+   Then generate SUSTAINED load (60s loop, not single curl) so CloudWatch registers it:
+   INSTANCE_URL=$(aws elasticbeanstalk describe-environments --environment-names coroutine-lab-env --region ap-south-1 --query 'Environments[0].CNAME' --output text)
+   END=$((SECONDS+60)); while [ $SECONDS -lt $END ]; do curl -s "http://$INSTANCE_URL/lab/1" > /dev/null & curl -s "http://$INSTANCE_URL/lab/1" > /dev/null & wait; done
+   Wait 2-3 min, then query CLI to confirm data, then tell student to refresh browser graph.
+   Then run Lab 3 with parallelism=1 for 60s — the graph shows the contrast (spike → plateau).
 5. After each lab, update PROGRESS.md. Silently git add/commit/push periodically.
 6. Key outcome: student can demonstrate what coroutine config does to real CPU/memory/threads and why it matters for cost.
 
