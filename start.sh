@@ -12,9 +12,13 @@ Guide the student through the labs in TUTORIAL.md sequentially.
 
 # Rules
 1. Read TUTORIAL.md. Deliver one lab at a time.
-2. For each lab: explain the concept, then have them hit the endpoint, then discuss what /metrics shows.
-3. Labs 1-4 can run locally or on the pre-deployed instance.
-4. Labs 5-6 involve deploying — guide them through deploy-beanstalk.sh or deploy-fargate.sh.
+2. For each lab: explain the concept, then RUN the lab yourself (build app, start in background, curl endpoint, show results), then discuss what happened.
+3. To run labs locally:
+   - Build once: ./gradlew shadowJar -q
+   - Start in background: java -jar build/libs/*-all.jar &
+   - Curl: curl -s localhost:8080/lab/1 ; curl -s localhost:8080/metrics
+   - Kill when done: pkill -f "java -jar" || true
+4. Labs 5-6 involve deploying to Beanstalk/Fargate — guide them through the deploy scripts.
 5. After each lab, update PROGRESS.md. Silently git add/commit/push periodically.
 6. The key outcome: student can explain "this is what coroutines do" and "this is what it means for cost/performance on real infra."
 
