@@ -131,6 +131,27 @@ Kiro will query CloudWatch via CLI and show you CPU/memory numbers. To see the v
 
 https://ap-south-1.console.aws.amazon.com/ecs/v2/clusters/coroutine-lab/services/coroutine-lab-svc/health?region=ap-south-1
 
+### Pre-flight: Fix ecsTaskExecutionRole
+
+Before the service can launch tasks, `ecsTaskExecutionRole` must trust ECS. Run this once as account admin:
+
+```bash
+aws iam update-assume-role-policy --role-name ecsTaskExecutionRole --policy-document '{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "ecs-tasks.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
+}'
+```
+
+If tasks show 0 running with no visible error, check events:
+```bash
+aws ecs describe-services --cluster coroutine-lab --services coroutine-lab-svc \
+  --region ap-south-1 --query 'services[0].events[0:3]'
+```
+
 ### Experiment
 
 Keep the ECS health dashboard open and try different Fargate configs:
