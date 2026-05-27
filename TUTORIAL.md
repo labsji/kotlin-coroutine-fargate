@@ -81,6 +81,22 @@ curl http://<env-url>/lab/1
 curl http://<env-url>/metrics
 ```
 
+### CloudWatch Metrics
+
+After deploying, open CloudWatch in your browser:
+- **Console:** https://ap-south-1.console.aws.amazon.com/cloudwatch/home?region=ap-south-1#metricsV2
+- Navigate: All Metrics → EC2 → Per-Instance Metrics
+- Select your instance → CPUUtilization, NetworkIn
+
+Or via CLI:
+```bash
+INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:elasticbeanstalk:environment-name,Values=coroutine-lab-env" --query 'Reservations[0].Instances[0].InstanceId' --output text --region ap-south-1)
+aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization \
+  --dimensions Name=InstanceId,Value=$INSTANCE_ID \
+  --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 60 --statistics Average --region ap-south-1
+```
+
 ---
 
 ## Lab 6: Fargate — Cost Optimization
@@ -93,6 +109,23 @@ curl http://<env-url>/metrics
 | 2048 | 2 | 4GB | ~$72 |
 
 **The punchline:** With `limitedParallelism(2)` + `Semaphore(10)`, you handle 1000 concurrent requests on 0.5 vCPU ($18/month). Without coroutine controls: need 2+ vCPU ($72/month). Same throughput, 4x cost difference.
+
+### CloudWatch Metrics (Fargate Container Insights)
+
+After deploying, check container-level metrics:
+```bash
+aws cloudwatch get-metric-statistics --namespace AWS/ECS --metric-name CPUUtilization \
+  --dimensions Name=ClusterName,Value=coroutine-lab Name=ServiceName,Value=coroutine-lab-svc \
+  --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 60 --statistics Average --region ap-south-1
+
+aws cloudwatch get-metric-statistics --namespace AWS/ECS --metric-name MemoryUtilization \
+  --dimensions Name=ClusterName,Value=coroutine-lab Name=ServiceName,Value=coroutine-lab-svc \
+  --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 60 --statistics Average --region ap-south-1
+```
+
+Or open the console: https://ap-south-1.console.aws.amazon.com/ecs/v2/clusters/coroutine-lab/services/coroutine-lab-svc/health?region=ap-south-1
 
 ---
 
