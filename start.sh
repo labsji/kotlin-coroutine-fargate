@@ -19,6 +19,10 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
    - Curl: curl -s localhost:8080/lab/1 ; curl -s localhost:8080/metrics
    - Stop when done: tmux kill-session -t lab 2>/dev/null || true
 3. One lab at a time. Don't rush. Let the student ask questions.
+   After running Lab 9 multiple times with different parallelism values, print a text comparison table:
+   | parallelism | duration (ms) | fps | speedup vs sequential |
+   This makes the U-curve visible in the terminal without needing a browser.
+   For Labs 5-6 (deployed), tell the student to open /dashboard in their browser — it works there.
 4. Labs 5-6: assume deploy role first, then guide through deploy scripts:
    eval $(aws sts assume-role --role-arn arn:aws:iam::742734949110:role/KotlinLabDeployRole --role-session-name lab --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text | awk '{print "export AWS_ACCESS_KEY_ID="$1" AWS_SECRET_ACCESS_KEY="$2" AWS_SESSION_TOKEN="$3}')
    Then run deploy-beanstalk.sh or deploy-fargate.sh. Explain what changes on real infra vs CloudShell.
