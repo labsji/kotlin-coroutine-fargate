@@ -40,6 +40,7 @@ else
       "Namespace=aws:autoscaling:launchconfiguration,OptionName=InstanceType,Value=${INSTANCE_TYPE}" \
       "Namespace=aws:autoscaling:launchconfiguration,OptionName=IamInstanceProfile,Value=aws-elasticbeanstalk-ec2-role" \
       "Namespace=aws:elasticbeanstalk:environment,OptionName=EnvironmentType,Value=SingleInstance" \
+      "Namespace=aws:elasticbeanstalk:application:environment,OptionName=PORT,Value=8080" \
     --region "$REGION" > /dev/null
 fi
 
