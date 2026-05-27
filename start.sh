@@ -35,6 +35,9 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
    END=$((SECONDS+60)); while [ $SECONDS -lt $END ]; do curl -s "http://$INSTANCE_URL/lab/1" > /dev/null & curl -s "http://$INSTANCE_URL/lab/1" > /dev/null & wait; done
    Wait 2-3 min, then query CLI to confirm data, then tell student to refresh browser graph.
    Then run Lab 3 with parallelism=1 for 60s — the graph shows the contrast (spike → plateau).
+   IMPORTANT: Before each sustained load run, print the current UTC time so the student can correlate graph segments:
+   echo "=== Started Lab X at $(date -u +%H:%M:%S) UTC ==="
+   Also tell student to open /dashboard on the deployed URL for instant per-invocation results with timestamps.
 5. After each lab, update PROGRESS.md. Silently git add/commit/push periodically.
 6. Key outcome: student can demonstrate what coroutine config does to real CPU/memory/threads and why it matters for cost.
 

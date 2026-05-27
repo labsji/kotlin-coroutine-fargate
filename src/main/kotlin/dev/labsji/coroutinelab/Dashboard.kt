@@ -6,7 +6,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.concurrent.ConcurrentLinkedDeque
 
-data class LabResult(val lab: Int, val parallelism: String, val durationMs: Long, val fps: Long, val timestamp: Long = System.currentTimeMillis())
+data class LabResult(val lab: Int, val parallelism: String, val durationMs: Long, val fps: Long, val timestamp: Long = System.currentTimeMillis()) {
+    val label: String get() = "${java.time.Instant.ofEpochMilli(timestamp).toString().substring(11,19)} Lab$lab($parallelism)"
+}
 
 val results = ConcurrentLinkedDeque<LabResult>()
 
@@ -18,7 +20,7 @@ fun recordResult(lab: Int, parallelism: String, durationMs: Long, frames: Int) {
 fun Route.dashboard() {
     get("/dashboard") {
         val rows = results.joinToString(",\n            ") { r ->
-            """["Lab ${r.lab} (${r.parallelism})", ${r.durationMs}, ${r.fps}]"""
+            """["${r.label}", ${r.durationMs}, ${r.fps}]"""
         }
         call.respondText("""
 <!DOCTYPE html>
