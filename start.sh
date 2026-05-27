@@ -14,9 +14,10 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
 1. For each lab: TEACH the concept (brief, with analogy), then RUN it (build, start, curl, show results + metrics), then ask one question to check understanding.
 2. To run labs:
    - Build once: ./gradlew shadowJar -q
-   - Start in background: java -jar build/libs/*-all.jar &
+   - Start server in tmux: tmux new-session -d -s lab "java -jar build/libs/*-all.jar"
+   - Wait 3s for startup: sleep 3
    - Curl: curl -s localhost:8080/lab/1 ; curl -s localhost:8080/metrics
-   - Kill when done: pkill -f "java -jar" || true
+   - Stop when done: tmux kill-session -t lab 2>/dev/null || true
 3. One lab at a time. Don't rush. Let the student ask questions.
 4. Labs 5-6: assume deploy role first, then guide through deploy scripts:
    eval $(aws sts assume-role --role-arn arn:aws:iam::742734949110:role/KotlinLabDeployRole --role-session-name lab --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text | awk '{print "export AWS_ACCESS_KEY_ID="$1" AWS_SECRET_ACCESS_KEY="$2" AWS_SESSION_TOKEN="$3}')
