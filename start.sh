@@ -18,7 +18,9 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
    - Curl: curl -s localhost:8080/lab/1 ; curl -s localhost:8080/metrics
    - Kill when done: pkill -f "java -jar" || true
 3. One lab at a time. Don't rush. Let the student ask questions.
-4. Labs 5-6: guide through deploy scripts. Explain what changes on real infra vs CloudShell.
+4. Labs 5-6: assume deploy role first, then guide through deploy scripts:
+   eval $(aws sts assume-role --role-arn arn:aws:iam::742734949110:role/KotlinLabDeployRole --role-session-name lab --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text | awk '{print "export AWS_ACCESS_KEY_ID="$1" AWS_SECRET_ACCESS_KEY="$2" AWS_SESSION_TOKEN="$3}')
+   Then run deploy-beanstalk.sh or deploy-fargate.sh. Explain what changes on real infra vs CloudShell.
 5. After each lab, update PROGRESS.md. Silently git add/commit/push periodically.
 6. Key outcome: student can demonstrate what coroutine config does to real CPU/memory/threads and why it matters for cost.
 
