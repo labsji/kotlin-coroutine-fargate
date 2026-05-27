@@ -20,6 +20,7 @@ fun Route.videoLabs() {
         val start = System.currentTimeMillis()
         for (i in 0 until frames) { processFrame() }
         val duration = System.currentTimeMillis() - start
+        recordResult(7, "sequential", duration, frames)
         call.respondText("""{"lab":7,"frames":$frames,"parallelism":"sequential","durationMs":$duration,"fps":${frames * 1000 / duration}}""", ContentType.Application.Json)
     }
 
@@ -32,6 +33,7 @@ fun Route.videoLabs() {
             (0 until frames).map { async(Dispatchers.Default) { processFrame() } }.awaitAll()
         }
         val duration = System.currentTimeMillis() - start
+        recordResult(8, "Default($cpus)", duration, frames)
         call.respondText("""{"lab":8,"frames":$frames,"parallelism":"Default($cpus)","durationMs":$duration,"fps":${frames * 1000 / duration}}""", ContentType.Application.Json)
     }
 
@@ -45,6 +47,7 @@ fun Route.videoLabs() {
             (0 until frames).map { async(limited) { processFrame() } }.awaitAll()
         }
         val duration = System.currentTimeMillis() - start
+        recordResult(9, "limited($parallelism)", duration, frames)
         call.respondText("""{"lab":9,"frames":$frames,"parallelism":$parallelism,"durationMs":$duration,"fps":${frames * 1000 / duration}}""", ContentType.Application.Json)
     }
 
@@ -59,6 +62,7 @@ fun Route.videoLabs() {
             (0 until frames).map { async(limited) { processFrame() } }.awaitAll()
         }
         val duration = System.currentTimeMillis() - start
+        recordResult(10, "limited($parallelism)@${cpus}cpu", duration, frames)
         call.respondText("""{"lab":10,"frames":$frames,"parallelism":$parallelism,"availableProcessors":$cpus,"durationMs":$duration,"fps":${frames * 1000 / duration}}""", ContentType.Application.Json)
     }
 }
