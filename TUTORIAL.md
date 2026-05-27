@@ -164,8 +164,74 @@ Each deploy takes ~2 min. The graph updates live — you'll see the shape of you
 
 ---
 
+## Labs 7-10: Video Processing Capstone
+
+These labs use a realistic workload — processing video frames — to make coroutine behavior visceral. Each "frame" is ~30ms of CPU work (simulating decode + detect + annotate). The app generates a synthetic bouncing ball video at runtime (no file needed).
+
+### Lab 7: Sequential Baseline
+
+**Endpoint:** `GET /video/lab/7?frames=100`
+
+Processes frames one at a time. This is what code does without coroutines.
+
+**Observe:** Duration scales linearly with frame count. On 2 vCPU, only 1 core is used.
+
+---
+
+### Lab 8: Dispatchers.Default (All Cores)
+
+**Endpoint:** `GET /video/lab/8?frames=100`
+
+All frames processed concurrently on Default dispatcher.
+
+**Observe:** ~4x faster than Lab 7 on 2 vCPU. Both cores saturated.
+
+---
+
+### Lab 9: limitedParallelism — The U-Curve
+
+**Endpoint:** `GET /video/lab/9?frames=100&parallelism=N`
+
+**The key lab.** Run it multiple times with different `parallelism` values:
+
+```
+curl localhost:8080/video/lab/9?frames=100&parallelism=1
+curl localhost:8080/video/lab/9?frames=100&parallelism=2
+curl localhost:8080/video/lab/9?frames=100&parallelism=4
+curl localhost:8080/video/lab/9?frames=100&parallelism=8
+curl localhost:8080/video/lab/9?frames=100&parallelism=16
+curl localhost:8080/video/lab/9?frames=100&parallelism=32
+```
+
+**Expected on 2 vCPU:**
+- parallelism=1 → slow (sequential)
+- parallelism=2 → fastest (matches vCPU)
+- parallelism=4+ → same or slightly worse (context switching)
+
+**The insight:** More parallelism ≠ faster. The sweet spot is vCPU count.
+
+---
+
+### Lab 10: Scale Hardware, Keep Config
+
+**Endpoint:** `GET /video/lab/10?frames=100&parallelism=4`
+
+Deploy to Fargate with different CPU units. Same code, same `parallelism=4`:
+
+| Fargate CPU | vCPU | Expected |
+|-------------|------|----------|
+| 512 | 0.5 | parallelism=4 but only 1 core → config exceeds hardware |
+| 1024 | 1 | parallelism=4 but only 1 core → same |
+| 2048 | 2 | parallelism=4, 2 cores → hardware is ceiling |
+| 4096 | 4 | parallelism=4, 4 cores → config is ceiling, fully utilized |
+
+**The insight:** `limitedParallelism` sets a ceiling. Right-sizing means matching config to hardware. Mismatch = wasted money.
+
+---
+
 ## Student Deliverable
 
 1. CloudWatch screenshots for each lab showing CPU/memory/threads
-2. Comparison table: same workload, different configs, different costs
-3. Recommendation: "For workload X, optimal config is Y vCPU + limitedParallelism(N) + Semaphore(M) = $Z/month"
+2. Lab 9 results table: parallelism vs duration (shows the U-curve)
+3. Lab 10 results: same config on different hardware (shows ceiling effect)
+4. Cost recommendation: "For workload X, optimal config is Y vCPU + limitedParallelism(N) = $Z/month"
