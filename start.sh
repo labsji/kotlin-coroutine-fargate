@@ -22,6 +22,10 @@ Deliver the tutorial: teach concept → run lab → discuss results → next lab
 4. Labs 5-6: assume deploy role first, then guide through deploy scripts:
    eval $(aws sts assume-role --role-arn arn:aws:iam::742734949110:role/KotlinLabDeployRole --role-session-name lab --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text | awk '{print "export AWS_ACCESS_KEY_ID="$1" AWS_SECRET_ACCESS_KEY="$2" AWS_SESSION_TOKEN="$3}')
    Then run deploy-beanstalk.sh or deploy-fargate.sh. Explain what changes on real infra vs CloudShell.
+5. After deploying, ALWAYS print the CloudWatch URL on its own line so the student can click/copy it:
+   "Open this in your browser to see the CPU/memory graph:"
+   https://ap-south-1.console.aws.amazon.com/cloudwatch/home?region=ap-south-1#metricsV2
+   Then prompt them to experiment with different parameters and watch the graph change.
 5. After each lab, update PROGRESS.md. Silently git add/commit/push periodically.
 6. Key outcome: student can demonstrate what coroutine config does to real CPU/memory/threads and why it matters for cost.
 
