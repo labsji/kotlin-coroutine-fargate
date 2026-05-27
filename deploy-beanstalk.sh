@@ -10,19 +10,12 @@ echo "Instance: $INSTANCE_TYPE | Region: $REGION"
 
 # Build
 ./gradlew shadowJar -q
-docker build -t coroutine-lab .
 
-# Create Dockerrun.aws.json
-cat > Dockerrun.aws.json << EOF
-{
-  "AWSEBDockerrunVersion": "1",
-  "Image": { "Name": "coroutine-lab", "Update": "true" },
-  "Ports": [{ "ContainerPort": 8080, "HostPort": 80 }]
-}
-EOF
-
-# Package
-zip -q deploy.zip Dockerfile build/libs/*-all.jar
+# Package — Corretto stack runs JAR directly via Procfile
+mkdir -p .ebdeploy
+cp build/libs/*-all.jar .ebdeploy/app.jar
+echo "web: java -jar app.jar" > .ebdeploy/Procfile
+cd .ebdeploy && zip -q ../deploy.zip app.jar Procfile && cd ..
 
 # Deploy
 aws elasticbeanstalk create-application --application-name "$APP_NAME" --region "$REGION" 2>/dev/null || true
@@ -35,15 +28,26 @@ aws elasticbeanstalk create-application-version --application-name "$APP_NAME" \
   --source-bundle S3Bucket="${APP_NAME}-deploy-${REGION}",S3Key="deploy.zip" \
   --region "$REGION" > /dev/null
 
-if aws elasticbeanstalk describe-environments --application-name "$APP_NAME" --environment-names "$ENV_NAME" --region "$REGION" --query 'Environments[0].Status' --output text 2>/dev/null | grep -q "Ready\|Launching"; then
+if aws elasticbeanstalk describe-environments --application-name "$APP_NAME" --environment-names "$ENV_NAME" --region "$REGION" --query 'Environments[0].Status' --output text 2>/dev/null | grep -qE "Ready|Launching|Updating"; then
+  echo "Updating existing environment..."
   aws elasticbeanstalk update-environment --environment-name "$ENV_NAME" --version-label "$VERSION" --region "$REGION" > /dev/null
 else
+  echo "Creating new environment..."
   aws elasticbeanstalk create-environment --application-name "$APP_NAME" \
     --environment-name "$ENV_NAME" --version-label "$VERSION" \
-    --solution-stack-name "64bit Amazon Linux 2023 v4.3.0 running Docker" \
-    --option-settings "Namespace=aws:autoscaling:launchconfiguration,OptionName=InstanceType,Value=${INSTANCE_TYPE}" \
+    --solution-stack-name "64bit Amazon Linux 2023 v4.12.0 running Corretto 21" \
+    --option-settings \
+      "Namespace=aws:autoscaling:launchconfiguration,OptionName=InstanceType,Value=${INSTANCE_TYPE}" \
+      "Namespace=aws:elasticbeanstalk:environment,OptionName=EnvironmentType,Value=SingleInstance" \
     --region "$REGION" > /dev/null
 fi
 
-echo "Deploying... Check status:"
+rm -rf .ebdeploy deploy.zip
+
+echo ""
+echo "Deploying... takes ~3-5 minutes."
+echo "Check status:"
 echo "  aws elasticbeanstalk describe-environments --environment-names $ENV_NAME --region $REGION --query 'Environments[0].{Status:Status,URL:CNAME}'"
+echo ""
+echo "Once ready, test:"
+echo "  curl http://\$(aws elasticbeanstalk describe-environments --environment-names $ENV_NAME --region $REGION --query 'Environments[0].CNAME' --output text)/lab/1"
