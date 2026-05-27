@@ -89,6 +89,16 @@ https://ap-south-1.console.aws.amazon.com/cloudwatch/home?region=ap-south-1#metr
 
 Navigate: All Metrics → EC2 → Per-Instance Metrics → CPUUtilization
 
+### Experiment
+
+Try different coroutine configs on the same instance and watch the graph change:
+- `curl http://<env-url>/lab/1?n=1000` — watch CPU spike to 100%
+- `curl http://<env-url>/lab/3?parallelism=1` — watch CPU drop to ~50% on 2-vCPU
+- `curl http://<env-url>/lab/3?parallelism=4` — watch CPU hit 100% again
+- `curl http://<env-url>/lab/4?permits=5` — steady low CPU, controlled throughput
+
+Keep the CloudWatch graph open — refresh every 60s to see the line move with each experiment.
+
 ---
 
 ## Lab 6: Fargate — Cost Optimization
@@ -107,6 +117,16 @@ Navigate: All Metrics → EC2 → Per-Instance Metrics → CPUUtilization
 Kiro will query CloudWatch via CLI and show you CPU/memory numbers. To see the visual graphs, open this URL in your browser:
 
 https://ap-south-1.console.aws.amazon.com/ecs/v2/clusters/coroutine-lab/services/coroutine-lab-svc/health?region=ap-south-1
+
+### Experiment
+
+Keep the ECS health dashboard open and try different Fargate configs:
+- Deploy with 256 CPU → run Lab 1 → watch CPU hit 100%, memory steady
+- Deploy with 1024 CPU → run Lab 1 → CPU drops to ~25% (more headroom)
+- Deploy with 512 CPU → run Lab 3 with parallelism=1 → CPU barely moves
+- Deploy with 256 CPU → run Lab 2 → watch memory spike (64 threads on 512MB)
+
+Each deploy takes ~2 min. The graph updates live — you'll see the shape of your coroutine config reflected in real infrastructure cost.
 
 ---
 
