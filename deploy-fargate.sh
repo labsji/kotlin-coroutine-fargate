@@ -46,5 +46,36 @@ aws logs create-log-group --log-group-name /ecs/coroutine-lab --region "$REGION"
 aws ecs register-task-definition --cli-input-json "$TASK_DEF" --region "$REGION" > /dev/null
 
 echo "Task registered: ${CPU} CPU / ${MEMORY} MB"
-echo "Create/update service with:"
-echo "  aws ecs create-service --cluster $CLUSTER --service-name $SERVICE --task-definition coroutine-lab --desired-count 1 --launch-type FARGATE --network-configuration 'awsvpcConfiguration={subnets=[<subnet>],securityGroups=[<sg>],assignPublicIp=ENABLED}' --region $REGION"
+
+# Auto-discover default VPC networking
+SUBNET=$(aws ec2 describe-subnets --region "$REGION" --filters "Name=default-for-az,Values=true" --query 'Subnets[0].SubnetId' --output text)
+VPC_ID=$(aws ec2 describe-subnets --region "$REGION" --subnet-ids "$SUBNET" --query 'Subnets[0].VpcId' --output text)
+SG=$(aws ec2 describe-security-groups --region "$REGION" --filters "Name=vpc-id,Values=$VPC_ID" "Name=group-name,Values=default" --query 'SecurityGroups[0].GroupId' --output text)
+
+# Open port 8080
+aws ec2 authorize-security-group-ingress --group-id "$SG" --protocol tcp --port 8080 --cidr 0.0.0.0/0 --region "$REGION" 2>/dev/null || true
+
+# Create or update service
+if aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --region "$REGION" --query 'services[0].status' --output text 2>/dev/null | grep -q ACTIVE; then
+  aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition coroutine-lab --force-new-deployment --region "$REGION" > /dev/null
+else
+  aws ecs create-service --cluster "$CLUSTER" --service-name "$SERVICE" --task-definition coroutine-lab \
+    --desired-count 1 --launch-type FARGATE \
+    --network-configuration "awsvpcConfiguration={subnets=[$SUBNET],securityGroups=[$SG],assignPublicIp=ENABLED}" \
+    --region "$REGION" > /dev/null
+fi
+
+echo "Waiting for task to start..."
+sleep 30
+
+# Get public IP
+TASK_ARN=$(aws ecs list-tasks --cluster "$CLUSTER" --service-name "$SERVICE" --region "$REGION" --query 'taskArns[0]' --output text)
+ENI=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" --region "$REGION" --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text)
+PUBLIC_IP=$(aws ec2 describe-network-interfaces --network-interface-ids "$ENI" --region "$REGION" --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+
+echo ""
+echo "=== Fargate deployed: ${CPU} CPU / ${MEMORY} MB ==="
+echo ""
+echo "  URL: http://${PUBLIC_IP}:8080"
+echo "  Test: curl http://${PUBLIC_IP}:8080/lab/1"
+echo "  Metrics: curl http://${PUBLIC_IP}:8080/metrics"
