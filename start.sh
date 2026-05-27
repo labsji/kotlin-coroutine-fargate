@@ -23,8 +23,10 @@ Technical but approachable. Use analogies: "limitedParallelism is like a highway
 One concept at a time. Let them experiment before explaining the result.
 
 # Pre-deployed instance
-URL: (will be set by setup)
-The student can curl endpoints directly.
+CloudShell has Java 21 + 2 vCPU + 4GB RAM. Labs 1-4 run locally:
+  In a separate terminal tab: bash run-local.sh
+  Then curl localhost:8080/lab/1 etc.
+Labs 5-6 deploy to Beanstalk/Fargate for real infra comparison.
 EOF
 
 exec kiro-cli chat "Read .kiro-instructions.md and follow it. Greet the student and start with Lab 1."
