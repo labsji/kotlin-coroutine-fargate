@@ -36,11 +36,9 @@ cat >> ~/.bashrc << 'EOF'
 
 # kotlin-coroutine-autostart
 if [ -d ~/kotlin-coroutine-fargate ] && [ -t 0 ]; then
-  if ! pgrep -u "$USER" -f "kiro-cli chat" >/dev/null 2>&1; then
-    cd ~/kotlin-coroutine-fargate
-    git checkout -q tutor-main 2>/dev/null
-    bash start.sh
-  fi
+  cd ~/kotlin-coroutine-fargate
+  git checkout -q tutor-main 2>/dev/null
+  bash start.sh
 fi
 EOF
 
