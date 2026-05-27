@@ -125,13 +125,20 @@ fun Application.module() {
             call.respondText("""
                 |Kotlin Coroutine Lab
                 |====================
-                |GET /lab/1?n=1000              — Dispatchers.Default (CPU-bound)
-                |GET /lab/2?n=1000              — Dispatchers.IO (blocking)
-                |GET /lab/3?n=1000&parallelism=4 — limitedParallelism
-                |GET /lab/4?n=1000&permits=10   — Semaphore
-                |GET /metrics                   — Thread count, memory, CPU
+                |GET /lab/1?n=1000                        — Dispatchers.Default (CPU-bound)
+                |GET /lab/2?n=1000                        — Dispatchers.IO (blocking)
+                |GET /lab/3?n=1000&parallelism=4          — limitedParallelism
+                |GET /lab/4?n=1000&permits=10             — Semaphore
+                |GET /video/lab/7?frames=100              — Video: sequential baseline
+                |GET /video/lab/8?frames=100              — Video: Dispatchers.Default
+                |GET /video/lab/9?frames=100&parallelism=4 — Video: limitedParallelism (U-curve)
+                |GET /video/lab/10?frames=100&parallelism=4 — Video: scale hardware test
+                |GET /metrics                             — Thread count, memory, CPU
             """.trimMargin())
         }
+
+        // Video processing labs (capstone)
+        videoLabs()
     }
 }
 
