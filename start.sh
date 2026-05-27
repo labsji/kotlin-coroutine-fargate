@@ -37,4 +37,4 @@ CloudShell has Java 21 + 2 vCPU + 4GB RAM. Labs 1-4 run locally:
 Labs 5-6 deploy to Beanstalk/Fargate for real infra comparison.
 EOF
 
-exec kiro-cli chat "Read .kiro-instructions.md and follow it. Greet the student and start with Lab 1."
+exec kiro-cli chat -a "Read .kiro-instructions.md and follow it. Greet the student and start with Lab 1."
