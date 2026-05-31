@@ -21,6 +21,7 @@ fun main() {
 fun Application.module() {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) { registry = prometheus }
+    install(io.ktor.server.plugins.cors.routing.CORS) { anyHost() }
 
     routing {
         // Lab 1: CPU-bound on Dispatchers.Default
@@ -134,6 +135,7 @@ fun Application.module() {
                 |GET /video/lab/9?frames=100&parallelism=4 — Video: limitedParallelism (U-curve)
                 |GET /video/lab/10?frames=100&parallelism=4 — Video: scale hardware test
                 |GET /dashboard                              — Live results chart
+                |GET /viz                                    — Side-by-side comparison UI
                 |GET /metrics                             — Thread count, memory, CPU
             """.trimMargin())
         }
@@ -141,8 +143,11 @@ fun Application.module() {
         // Video processing labs (capstone)
         videoLabs()
 
-        // Live dashboard
+        // Live dashboard (single instance)
         dashboard()
+
+        // Side-by-side visualization UI
+        vizUi()
     }
 }
 

@@ -18,6 +18,7 @@ repositories {
 dependencies {
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-cors-jvm")
     implementation("io.ktor:ktor-server-metrics-micrometer-jvm")
     implementation("io.micrometer:micrometer-registry-prometheus:1.13.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
