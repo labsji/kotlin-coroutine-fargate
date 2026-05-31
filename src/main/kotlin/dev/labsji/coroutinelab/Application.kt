@@ -148,6 +148,9 @@ fun Application.module() {
 
         // Side-by-side visualization UI
         vizUi()
+
+        // Server-side proxy for viz (calls backends, returns combined results)
+        proxyEndpoint()
     }
 }
 

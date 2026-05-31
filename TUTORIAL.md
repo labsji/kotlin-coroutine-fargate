@@ -235,3 +235,19 @@ Deploy to Fargate with different CPU units. Same code, same `parallelism=4`:
 2. Lab 9 results table: parallelism vs duration (shows the U-curve)
 3. Lab 10 results: same config on different hardware (shows ceiling effect)
 4. Cost recommendation: "For workload X, optimal config is Y vCPU + limitedParallelism(N) = $Z/month"
+
+
+---
+
+## Optional: HTTPS with Custom Domain
+
+The viz UI works over HTTP on the Beanstalk URL. For HTTPS (e.g., sharing with peers professionally):
+
+1. Register a domain or use an existing one
+2. Request an ACM certificate: `aws acm request-certificate --domain-name viz.yourdomain.com --validation-method DNS`
+3. Validate via DNS (add the CNAME record ACM gives you)
+4. Create an ALB with HTTPS listener using the cert
+5. Point your domain to the ALB via Route53 CNAME
+6. Register the Beanstalk instance in the ALB target group
+
+This is standard AWS HTTPS setup — not specific to this tutorial. Skip it if HTTP is fine for your use case.
