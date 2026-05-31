@@ -251,3 +251,45 @@ The viz UI works over HTTP on the Beanstalk URL. For HTTPS (e.g., sharing with p
 6. Register the Beanstalk instance in the ALB target group
 
 This is standard AWS HTTPS setup — not specific to this tutorial. Skip it if HTTP is fine for your use case.
+
+
+---
+
+## Bursting: EC2 (Beanstalk t3) vs Fargate
+
+### The Key Difference
+
+| | EC2 t3 (Beanstalk) | Fargate |
+|---|---|---|
+| **CPU model** | Burstable — baseline 20% (t3.small), burst to 100% using credits | Fixed — you get exactly what you pay for, always |
+| **When idle** | Accumulates credits (up to 576 for t3.small) | No credits — CPU always available at stated capacity |
+| **Under sustained load** | Burns credits → eventually throttled to baseline (20%) | Consistent — no degradation over time |
+| **Cost** | Cheaper for spiky workloads (idle most of time, burst occasionally) | Predictable cost, no surprises |
+| **Gotcha** | Performance degrades silently after credits exhausted | What you see is what you get |
+
+### What You'll Observe
+
+**Short burst (< 5 min):** t3.small outperforms Fargate 1024 because t3 has 2 vCPU at burst vs Fargate's fixed 1 vCPU.
+
+**Sustained load (> 10 min):** t3.small degrades to baseline (20% of 2 vCPU = 0.4 vCPU effective). Fargate 1024 stays constant at 1 vCPU. Fargate wins.
+
+### Why This Matters for Coroutines
+
+If you tune `limitedParallelism(2)` on a t3.small during testing (when credits are full), it works great. In production under sustained load, the instance throttles to 0.4 vCPU — your parallelism=2 setting now has 2 threads fighting over 0.4 cores. Latency spikes. The hardware lied about its capacity.
+
+**Rule of thumb:**
+- **Spiky workloads** (web server, occasional API calls) → t3 burstable, tune parallelism to burst vCPU count
+- **Sustained workloads** (batch processing, continuous stream) → Fargate or non-burstable (m5/c5), tune parallelism to actual fixed vCPU count
+- **Always test under sustained load** before finalizing your parallelism config
+
+### Check Your Credit Balance
+
+```bash
+aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUCreditBalance \
+  --dimensions Name=InstanceId,Value=<INSTANCE_ID> \
+  --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 --statistics Average --region ap-south-1
+```
+
+When this hits 0, your t3 is throttled. Your coroutine config is now meaningless.
