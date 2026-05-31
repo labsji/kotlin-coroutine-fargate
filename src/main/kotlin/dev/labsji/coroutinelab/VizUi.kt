@@ -67,6 +67,15 @@ canvas{background:#16213e;border-radius:12px;padding:10px;margin:10px 0}
 const costs = {'256':0.012,'512':0.025,'1024':0.049,'2048':0.099,'t3.small':0.021,'t3.micro':0.010};
 let durationChart, fpsChart;
 
+// Pre-fill from query params: /viz?i=IP1,IP2,IP3
+const params = new URLSearchParams(window.location.search);
+const ips = (params.get('i') || '').split(',').filter(Boolean);
+ips.forEach((ip, idx) => {
+  const el = document.getElementById('url'+idx);
+  if (el) el.value = 'http://'+ip+':8080';
+});
+if (ips.length > 0) document.querySelector('.instances em').textContent = ips.length + ' instances pre-configured';
+
 document.getElementById('parallelism').oninput = e => document.getElementById('pval').textContent = e.target.value;
 document.getElementById('frames').oninput = e => document.getElementById('fval').textContent = e.target.value;
 

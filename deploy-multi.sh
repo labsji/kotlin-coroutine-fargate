@@ -89,8 +89,12 @@ echo "$VIZ_JSON" > viz-instances.json
 
 echo ""
 echo "=== Ready ==="
-echo "  Viz config: viz-instances.json"
-echo "  Open /dashboard on any instance for single-instance view"
-echo "  For side-by-side: serve viz/index.html locally or deploy viz instance"
+# Build viz URL with all IPs
+IP_LIST=$(printf "%s," "${INSTANCES[@]}" | sed 's/[0-9]*://g' | sed 's/,$//')
+FIRST_IP="${INSTANCES[0]##*:}"
 echo ""
-echo "  Auto-teardown in 30 min: ./teardown-multi.sh"
+echo "  Open this URL in your browser:"
+echo ""
+echo "  http://${FIRST_IP}:8080/viz?i=${IP_LIST}"
+echo ""
+echo "  Teardown when done: ./teardown-multi.sh"
