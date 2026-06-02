@@ -2,6 +2,10 @@
 # deploy-multi.sh — Deploy coroutine-lab to multiple Fargate configs in parallel + viz UI
 set -e
 REGION="${AWS_REGION:-ap-south-1}"
+
+# CloudShell injects credentials that override env vars — unset them if assuming a role
+unset AWS_CONTAINER_CREDENTIALS_FULL_URI AWS_CONTAINER_AUTHORIZATION_TOKEN 2>/dev/null || true
+
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 CLUSTER="coroutine-lab"
 REPO_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/coroutine-lab"
